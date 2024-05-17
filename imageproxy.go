@@ -490,7 +490,7 @@ func (t *TransformingTransport) RoundTrip(req *http.Request) (*http.Response, er
 	return &http.Response{
 		Status:        resp.Status,
 		StatusCode:    resp.StatusCode,
-		Header:        resp.Header,
+		Header:        header,
 		ContentLength: int64(len(img)),
 		Body:          io.NopCloser(bytes.NewReader(img)),
 		Request:       req,
