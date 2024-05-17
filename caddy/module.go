@@ -13,8 +13,8 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/peterbourgon/diskv"
+	"github.com/syumai/imageproxy"
 	"go.uber.org/zap"
-	"willnorris.com/go/imageproxy"
 )
 
 func init() {

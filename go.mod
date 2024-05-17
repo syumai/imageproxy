@@ -8,14 +8,13 @@ require (
 	github.com/aws/aws-sdk-go v1.52.5
 	github.com/die-net/lrucache v0.0.0-20220628165024-20a71bc65bf1
 	github.com/disintegration/imaging v1.6.2
-	github.com/fcjr/aia-transport-go v1.2.2
 	github.com/gomodule/redigo v1.9.2
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/muesli/smartcrop v0.3.0
 	github.com/peterbourgon/diskv v0.0.0-20171120014656-2973218375c3
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
-	github.com/syumai/tinyutil v0.3.1
+	github.com/syumai/tinyutil v0.3.2-0.20240517162938-edb9a6e989a2
 	golang.org/x/image v0.16.0
 	willnorris.com/go/gifresize v1.0.0
 )

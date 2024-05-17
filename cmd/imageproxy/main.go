@@ -22,10 +22,10 @@ import (
 	"github.com/gregjones/httpcache/diskcache"
 	rediscache "github.com/gregjones/httpcache/redis"
 	"github.com/peterbourgon/diskv"
-	"willnorris.com/go/imageproxy"
-	"willnorris.com/go/imageproxy/internal/gcscache"
-	"willnorris.com/go/imageproxy/internal/s3cache"
-	"willnorris.com/go/imageproxy/third_party/envy"
+	"github.com/syumai/imageproxy"
+	"github.com/syumai/imageproxy/internal/gcscache"
+	"github.com/syumai/imageproxy/internal/s3cache"
+	"github.com/syumai/imageproxy/third_party/envy"
 )
 
 const defaultMemorySize = 100

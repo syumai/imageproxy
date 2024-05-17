@@ -17,7 +17,7 @@ import (
 	"os"
 	"strings"
 
-	"willnorris.com/go/imageproxy"
+	"github.com/syumai/imageproxy"
 )
 
 var signingKey = flag.String("key", "@/etc/imageproxy.key", "signing key, or file containing key prefixed with '@'")

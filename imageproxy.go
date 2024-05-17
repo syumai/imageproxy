@@ -3,7 +3,7 @@
 
 // Package imageproxy provides an image proxy server.  For typical use of
 // creating and using a Proxy, see cmd/imageproxy/main.go.
-package imageproxy // import "willnorris.com/go/imageproxy"
+package imageproxy // import "github.com/syumai/imageproxy"
 
 import (
 	"bufio"
@@ -23,12 +23,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fcjr/aia-transport-go"
 	"github.com/gregjones/httpcache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	tphttp "github.com/syumai/imageproxy/third_party/http"
 	"github.com/syumai/tinyutil/httputil"
-	tphttp "willnorris.com/go/imageproxy/third_party/http"
 )
 
 // Proxy serves image requests.
@@ -92,9 +91,6 @@ type Proxy struct {
 // used to fetch remote URLs.  If nil is provided, http.DefaultTransport will
 // be used.
 func NewProxy(transport http.RoundTripper, cache Cache) *Proxy {
-	if transport == nil {
-		transport, _ = aia.NewTransport()
-	}
 	if cache == nil {
 		cache = NopCache
 	}
