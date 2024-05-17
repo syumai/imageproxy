@@ -27,16 +27,14 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/syumai/tinyutil/httputil"
 	tphttp "willnorris.com/go/imageproxy/third_party/http"
 )
 
-// Maximum number of redirection-followings allowed.
-const maxRedirects = 10
-
 // Proxy serves image requests.
 type Proxy struct {
-	Client *http.Client // client used to fetch remote URLs
-	Cache  Cache        // cache used to cache responses
+	Client *httputil.Client // client used to fetch remote URLs
+	Cache  Cache            // cache used to cache responses
 
 	// AllowHosts specifies a list of remote hosts that images can be
 	// proxied from.  An empty list means all hosts are allowed.
@@ -54,9 +52,6 @@ type Proxy struct {
 	// IncludeReferer controls whether the original Referer request header
 	// is included in remote requests.
 	IncludeReferer bool
-
-	// FollowRedirects controls whether imageproxy will follow redirects or not.
-	FollowRedirects bool
 
 	// DefaultBaseURL is the URL that relative remote URLs are resolved in
 	// reference to.  If nil, all remote URLs specified in requests must be
@@ -108,22 +103,7 @@ func NewProxy(transport http.RoundTripper, cache Cache) *Proxy {
 		Cache: cache,
 	}
 
-	client := new(http.Client)
-	client.Transport = &httpcache.Transport{
-		Transport: &TransformingTransport{
-			Transport:     transport,
-			CachingClient: client,
-			log: func(format string, v ...interface{}) {
-				if proxy.Verbose {
-					proxy.logf(format, v...)
-				}
-			},
-		},
-		Cache:               cache,
-		MarkCachedResponses: true,
-	}
-
-	proxy.Client = client
+	proxy.Client = httputil.DefaultClient
 
 	return proxy
 }
@@ -187,27 +167,6 @@ func (p *Proxy) serveImage(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(p.PassRequestHeaders) != 0 {
 		copyHeader(actualReq.Header, r.Header, p.PassRequestHeaders...)
-	}
-	if p.FollowRedirects {
-		// FollowRedirects is true (default), ensure that the redirected host is allowed
-		p.Client.CheckRedirect = func(newreq *http.Request, via []*http.Request) error {
-			if len(via) > maxRedirects {
-				if p.Verbose {
-					p.logf("followed too many redirects (%d).", len(via))
-				}
-				return errTooManyRedirects
-			}
-			if hostMatches(p.DenyHosts, newreq.URL) {
-				http.Error(w, msgNotAllowedInRedirect, http.StatusForbidden)
-				return errNotAllowed
-			}
-			return nil
-		}
-	} else {
-		// FollowRedirects is false, don't follow redirects
-		p.Client.CheckRedirect = func(newreq *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
 	}
 	resp, err := p.Client.Do(actualReq)
 

@@ -35,7 +35,6 @@ var allowHosts = flag.String("allowHosts", "", "comma separated list of allowed 
 var denyHosts = flag.String("denyHosts", "", "comma separated list of denied remote hosts")
 var referrers = flag.String("referrers", "", "comma separated list of allowed referring hosts")
 var includeReferer = flag.Bool("includeReferer", false, "include referer header in remote requests")
-var followRedirects = flag.Bool("followRedirects", true, "follow redirects")
 var baseURL = flag.String("baseURL", "", "default base URL for relative remote URLs")
 var passRequestHeaders = flag.String("passRequestHeaders", "", "comma separatetd list of request headers to pass to remote server")
 var cache tieredCache
@@ -82,7 +81,6 @@ func main() {
 	}
 
 	p.IncludeReferer = *includeReferer
-	p.FollowRedirects = *followRedirects
 	p.Timeout = *timeout
 	p.ScaleUp = *scaleUp
 	p.Verbose = *verbose

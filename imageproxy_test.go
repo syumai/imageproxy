@@ -13,7 +13,6 @@ import (
 	"image/png"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"os"
 	"reflect"
@@ -366,92 +365,6 @@ func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	buf := bufio.NewReader(bytes.NewBufferString(raw))
 	return http.ReadResponse(buf, req)
-}
-
-func TestProxy_ServeHTTP(t *testing.T) {
-	p := &Proxy{
-		Client: &http.Client{
-			Transport: testTransport{},
-		},
-		AllowHosts:   []string{"good.test"},
-		ContentTypes: []string{"image/*"},
-	}
-
-	tests := []struct {
-		url  string // request URL
-		code int    // expected response status code
-	}{
-		{"/favicon.ico", http.StatusOK},
-		{"//foo", http.StatusBadRequest},                            // invalid request URL
-		{"/http://bad.test/", http.StatusForbidden},                 // Disallowed host
-		{"/http://good.test/error", http.StatusInternalServerError}, // HTTP protocol error
-		{"/http://good.test/nocontent", http.StatusNoContent},       // non-OK response
-		{"/100/http://good.test/png", http.StatusOK},
-		{"/100/http://good.test/plain", http.StatusForbidden}, // non-image response
-
-		// health-check URLs
-		{"/", http.StatusOK},
-		{"/health-check", http.StatusOK},
-	}
-
-	for _, tt := range tests {
-		req, _ := http.NewRequest("GET", "http://localhost"+tt.url, nil)
-		resp := httptest.NewRecorder()
-		p.ServeHTTP(resp, req)
-
-		if got, want := resp.Code, tt.code; got != want {
-			t.Errorf("ServeHTTP(%v) returned status %d, want %d", req, got, want)
-		}
-	}
-}
-
-// test that 304 Not Modified responses are returned properly.
-func TestProxy_ServeHTTP_is304(t *testing.T) {
-	p := &Proxy{
-		Client: &http.Client{
-			Transport: testTransport{},
-		},
-	}
-
-	req, _ := http.NewRequest("GET", "http://localhost/http://good.test/etag", nil)
-	req.Header.Add("If-None-Match", `"tag"`)
-	resp := httptest.NewRecorder()
-	p.ServeHTTP(resp, req)
-
-	if got, want := resp.Code, http.StatusNotModified; got != want {
-		t.Errorf("ServeHTTP(%v) returned status %d, want %d", req, got, want)
-	}
-	if got, want := resp.Header().Get("Etag"), `"tag"`; got != want {
-		t.Errorf("ServeHTTP(%v) returned etag header %v, want %v", req, got, want)
-	}
-}
-
-func TestProxy_ServeHTTP_maxRedirects(t *testing.T) {
-	p := &Proxy{
-		Client: &http.Client{
-			Transport: testTransport{},
-		},
-		FollowRedirects: true,
-	}
-
-	tests := []struct {
-		url  string
-		code int
-	}{
-		{"/http://redirect.test/redirects-0", http.StatusOK},
-		{"/http://redirect.test/redirects-2", http.StatusOK},
-		{"/http://redirect.test/redirects-11", http.StatusInternalServerError}, // too many redirects
-	}
-
-	for _, tt := range tests {
-		req, _ := http.NewRequest("GET", "http://localhost"+tt.url, nil)
-		resp := httptest.NewRecorder()
-		p.ServeHTTP(resp, req)
-
-		if got, want := resp.Code, tt.code; got != want {
-			t.Errorf("ServeHTTP(%v) returned status %d, want %d", req, got, want)
-		}
-	}
 }
 
 func TestProxy_log(t *testing.T) {

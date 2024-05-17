@@ -15,6 +15,7 @@ require (
 	github.com/peterbourgon/diskv v0.0.0-20171120014656-2973218375c3
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
+	github.com/syumai/tinyutil v0.3.1
 	golang.org/x/image v0.16.0
 	willnorris.com/go/gifresize v1.0.0
 )
