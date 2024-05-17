@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -175,7 +176,6 @@ func (p *Proxy) serveImage(w http.ResponseWriter, r *http.Request) {
 		copyHeader(actualReq.Header, r.Header, p.PassRequestHeaders...)
 	}
 	resp, err := p.Client.Do(actualReq)
-
 	if err != nil {
 		msg := fmt.Sprintf("error fetching remote image: %v", err)
 		p.log(msg)
@@ -480,18 +480,19 @@ func (t *TransformingTransport) RoundTrip(req *http.Request) (*http.Response, er
 		img = b
 	}
 
-	// replay response with transformed image and updated content length
-	buf := new(bytes.Buffer)
-	fmt.Fprintf(buf, "%s %s\n", resp.Proto, resp.Status)
-	if err := resp.Header.WriteSubset(buf, map[string]bool{
-		"Content-Length": true,
-		// exclude Content-Type header if the format may have changed during transformation
-		"Content-Type": opt.Format != "" || resp.Header.Get("Content-Type") == "image/webp" || resp.Header.Get("Content-Type") == "image/tiff",
-	}); err != nil {
-		t.log("error copying headers: %v", err)
+	header := resp.Header.Clone()
+	// exclude Content-Type header if the format may have changed during transformation
+	if opt.Format != "" || resp.Header.Get("Content-Type") == "image/webp" || resp.Header.Get("Content-Type") == "image/tiff" {
+		header.Set("Content-Type", "")
 	}
-	fmt.Fprintf(buf, "Content-Length: %d\n\n", len(img))
-	buf.Write(img)
+	header.Set("Content-Length", strconv.Itoa(len(img)))
 
-	return http.ReadResponse(bufio.NewReader(buf), req)
+	return &http.Response{
+		Status:        resp.Status,
+		StatusCode:    resp.StatusCode,
+		Header:        resp.Header,
+		ContentLength: int64(len(img)),
+		Body:          io.NopCloser(bytes.NewReader(img)),
+		Request:       req,
+	}, nil
 }
