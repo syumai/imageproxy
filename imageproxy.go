@@ -99,7 +99,17 @@ func NewProxy(transport http.RoundTripper, cache Cache) *Proxy {
 		Cache: cache,
 	}
 
-	proxy.Client = httputil.DefaultClient
+	client := new(httputil.Client)
+	client.Transport = &TransformingTransport{
+		Transport:     transport,
+		CachingClient: client,
+		log: func(format string, v ...interface{}) {
+			if proxy.Verbose {
+				proxy.logf(format, v...)
+			}
+		},
+	}
+	proxy.Client = client
 
 	return proxy
 }
@@ -427,7 +437,7 @@ type TransformingTransport struct {
 	// CachingClient is used to fetch images to be resized.  This client is
 	// used rather than Transport directly in order to ensure that
 	// responses are properly cached.
-	CachingClient *http.Client
+	CachingClient *httputil.Client
 
 	log func(format string, v ...interface{})
 }
